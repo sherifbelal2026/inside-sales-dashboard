@@ -42,7 +42,7 @@ svg text{fill:var(--mute);font-size:11px}
 <div class="wrap">
 <header>
  <div><h1>Inside Sales Hourly Dashboard</h1>
- <div class="mute" id="stamp">Loading…</div><div id="msg"></div></div>
+ <div id="ago" style="font-weight:600"></div><div class="mute" id="stamp">Loading…</div><div id="msg"></div></div>
  <div class="filters">
   <select id="fDate" aria-label="Date"></select>
   <select id="fSeller" aria-label="Seller"></select>
@@ -78,6 +78,7 @@ function view(){
 function draw(){
   const v=view(), {d,names,calls,moves,G}=v;
   $("stamp").textContent=`${state.date} · Salesforce as of ${d.sources.salesforce} · Toku as of ${d.sources.toku} · Asterboard as of ${d.sources.asterboard}`;
+  renderAgo();
   const ans=calls.filter(c=>c[3]), tc=calls.length, ta=ans.length, aht=ta?sum(ans.map(c=>c[2]))/ta:0;
   const cs=sum(names.map(n=>d.cases[n]||0));
   $("kpis").innerHTML=[["Total calls",tc,1],["Answered",ta],["Answer rate",tc?Math.round(100*ta/tc)+"%":"–"],["AHT (answered)",fmt(aht)],["Movements",moves.length,0,v.off?v.off+" outside 8:00–22:00":""],["New cases",cs]]
@@ -111,6 +112,15 @@ const seg=$("seg");[["calls","Calls"],["answered","Answered"],["moves","Movement
 $("fDate").onchange=e=>{state.date=e.target.value;fillFilters();draw()};
 $("fSeller").onchange=e=>{state.seller=e.target.value;draw()};
 $("fSrc").onchange=e=>{state.src=e.target.value;draw()};
+function renderAgo(){
+  const d=DAYS[state.date]||SEED, el=$("ago"); if(!el)return;
+  const t=Date.parse(d.updatedAt||`${state.date}T${d.updated}:00+02:00`);
+  if(isNaN(t)){el.textContent="";return}
+  const m=Math.max(0,Math.floor((Date.now()-t)/60000));
+  const txt=m<1?"just now":m<60?`${m} minute${m===1?"":"s"} ago`:m<1440?`${Math.floor(m/60)} hr ${m%60} min ago`:`${Math.floor(m/1440)} day${m>=2880?"s":""} ago`;
+  el.textContent="Last update "+txt; el.style.color=m>75?"var(--warn)":"var(--good)";
+}
+setInterval(renderAgo,30000);
 fillFilters();draw();
 // Latest data lives in data.json next to this page (one entry per day); it is refreshed during the day.
 (async()=>{
