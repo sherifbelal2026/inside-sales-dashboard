@@ -64,7 +64,7 @@ svg text{fill:var(--mute);font-size:11px}
 <script>
 // Fallback snapshot embedded at publish time; the live copy comes from the shared store.
 const SEED = {"date":"2026-11-15","updated":"13:10","sources":{"toku":"12:25","asterboard":"12:31","salesforce":"13:10"},"names":["Yoliana Ramzy","Sharath Chakkingal","Manar Aborezktien","Fatma Maghazy","Nada Abdelfattah","Rana Salem","Mennatallah Abdallah","Magdy Hamza","Rahma Abdelrazik","Youmna Ali","Shahd Shehata","Kerollos Rizk","Omar Ghanem","Ziad Abdelmetaal","Abdelrahman Tayea"],"calls":[["Abdelrahman Tayea",12,0,0,"Toku"],["Sharath Chakkingal",11,16,1,"Toku"],["Ziad Abdelmetaal",12,0,0,"Toku"],["Sharath Chakkingal",11,4,1,"Toku"],["Sharath Chakkingal",11,0,0,"Toku"],["Sharath Chakkingal",12,69,1,"Toku"],["Abdelrahman Tayea",10,40,1,"Toku"],["Magdy Hamza",12,0,0,"Toku"],["Sharath Chakkingal",9,0,0,"Toku"],["Abdelrahman Tayea",11,0,0,"Toku"],["Sharath Chakkingal",11,80,1,"Toku"],["Magdy Hamza",12,0,0,"Toku"],["Sharath Chakkingal",9,35,1,"Toku"],["Ziad Abdelmetaal",12,60,1,"Toku"],["Abdelrahman Tayea",11,0,0,"Toku"],["Ziad Abdelmetaal",12,28,1,"Toku"],["Sharath Chakkingal",9,0,0,"Toku"],["Fatma Maghazy",11,0,0,"Toku"],["Sharath Chakkingal",10,437,1,"Toku"],["Sharath Chakkingal",11,0,0,"Toku"],["Magdy Hamza",12,0,0,"Toku"],["Sharath Chakkingal",11,380,1,"Toku"],["Ziad Abdelmetaal",12,0,0,"Toku"],["Nada Abdelfattah",12,86,1,"Asterboard"],["Kerollos Rizk",12,58,0,"Asterboard"],["Kerollos Rizk",12,52,0,"Asterboard"],["Rana Salem",12,283,1,"Asterboard"],["Kerollos Rizk",12,14,0,"Asterboard"],["Kerollos Rizk",12,38,1,"Asterboard"],["Kerollos Rizk",12,63,0,"Asterboard"],["Kerollos Rizk",12,51,0,"Asterboard"],["Kerollos Rizk",12,221,1,"Asterboard"],["Kerollos Rizk",12,69,1,"Asterboard"],["Shahd Shehata",12,857,1,"Asterboard"],["Kerollos Rizk",12,75,1,"Asterboard"],["Shahd Shehata",12,43,0,"Asterboard"],["Kerollos Rizk",12,129,1,"Asterboard"],["Youmna Ali",11,136,1,"Asterboard"],["Shahd Shehata",11,96,1,"Asterboard"],["Kerollos Rizk",11,84,1,"Asterboard"],["Abdelrahman Tayea",11,299,1,"Asterboard"],["Abdelrahman Tayea",11,65,0,"Asterboard"],["Shahd Shehata",11,53,1,"Asterboard"],["Fatma Maghazy",11,5,0,"Asterboard"],["Shahd Shehata",11,25,1,"Asterboard"],["Rana Salem",11,247,1,"Asterboard"],["Rana Salem",11,269,1,"Asterboard"],["Rana Salem",11,19,0,"Asterboard"],["Rana Salem",11,26,0,"Asterboard"],["Rana Salem",11,22,0,"Asterboard"],["Rana Salem",11,21,0,"Asterboard"],["Kerollos Rizk",11,214,1,"Asterboard"],["Youmna Ali",11,60,1,"Asterboard"],["Rana Salem",11,35,0,"Asterboard"],["Rana Salem",10,378,1,"Asterboard"]],"moves":[["Abdelrahman Tayea",12,"Collecting Documents"],["Abdelrahman Tayea",11,"Quality Check"],["Fatma Maghazy",12,"Collecting Documents"],["Fatma Maghazy",11,"Lost"],["Kerollos Rizk",9,"Onboarding"],["Kerollos Rizk",9,"Onboarding"],["Kerollos Rizk",9,"Onboarding"],["Kerollos Rizk",9,"Onboarding"],["Magdy Hamza",12,"Collecting Documents"],["Manar Aborezktien",11,"Onboarding"],["Nada Abdelfattah",12,"Converted"],["Nada Abdelfattah",11,"Collecting Documents"],["Nada Abdelfattah",12,"Menu processing"],["Rahma Abdelrazik",8,"Onboarding"],["Rana Salem",11,"Negotiation"],["Rana Salem",11,"Collecting Documents"],["Rana Salem",12,"Quality Check"],["Shahd Shehata",11,"Quality Check"],["Shahd Shehata",12,"Quality Check"],["Sharath Chakkingal",12,"Collecting Documents"],["Yoliana Ramzy",11,"Quality Check"],["Yoliana Ramzy",12,"Quality Check"],["Youmna Ali",12,"Quality Check"],["Ziad Abdelmetaal",1,"Collecting Documents"],["Fatma Maghazy",11,"Lost"],["Kerollos Rizk",12,"Contacted"],["Kerollos Rizk",12,"Lost"],["Mennatallah Abdallah",12,"Lost"],["Nada Abdelfattah",12,"Contacted"],["Nada Abdelfattah",12,"Long-term follow-up"],["Omar Ghanem",13,"Contacted"],["Rana Salem",11,"Lost"],["Rana Salem",11,"Long-term follow-up"],["Sharath Chakkingal",10,"Open"],["Sharath Chakkingal",10,"Open"],["Sharath Chakkingal",11,"In Review"],["Sharath Chakkingal",12,"Lost"],["Sharath Chakkingal",12,"Lost"],["Youmna Ali",11,"Contacted"],["Youmna Ali",12,"Contacted"]],"cases":{"Abdelrahman Tayea":1,"Yoliana Ramzy":2,"Rana Salem":1,"Youmna Ali":1,"Shahd Shehata":1,"Nada Abdelfattah":1}};
-const HOURS=[8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+const HOURS=[10,11,12,13,14,15,16]; // dashboard window 10:00–17:00; activity outside it is not counted
 let DAYS={}; DAYS[SEED.date]=SEED;
 let cur="calls", state={date:SEED.date,seller:"",src:""};
 const $=id=>document.getElementById(id), sum=a=>a.reduce((x,y)=>x+y,0);
@@ -72,18 +72,19 @@ const fmt=s=>s?Math.floor(s/60)+":"+String(Math.round(s%60)).padStart(2,"0"):"�
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function view(){
   const d=DAYS[state.date]||SEED, names=d.names.filter(n=>!state.seller||n===state.seller);
-  const calls=d.calls.filter(c=>names.includes(c[0])&&(!state.src||c[4]===state.src));
-  const moves=d.moves.filter(m=>names.includes(m[0]));
+  const inW=h=>HOURS.includes(h);
+  const calls=d.calls.filter(c=>inW(c[1])&&names.includes(c[0])&&(!state.src||c[4]===state.src));
+  const moves=d.moves.filter(m=>inW(m[1])&&names.includes(m[0]));
   const grid=(rows,pick)=>names.map(n=>HOURS.map(h=>rows.filter(r=>r[0]===n&&r[1]===h&&pick(r)).length));
-  const live=(d.live||[]).filter(l=>names.includes(l[0]));
+  const live=(d.live||[]).filter(l=>inW(l[1])&&names.includes(l[0]));
   const G={calls:grid(calls,()=>1),answered:grid(calls,r=>r[3]),moves:grid(moves,()=>1),live:grid(live,()=>1)};
-  const off=moves.filter(m=>!HOURS.includes(m[1])).length;
+  const off=0;
   const crows=(d.caseRows||[]).filter(c=>names.includes(c[0]));
   return {d,names,calls,moves,live,crows,G,off};
 }
 function draw(){
   const v=view(), {d,names,calls,moves,G}=v;
-  $("stamp").textContent=`${state.date} · Salesforce as of ${d.sources.salesforce} · Toku as of ${d.sources.toku} · Asterboard as of ${d.sources.asterboard}`;
+  $("stamp").textContent=`${state.date} · Window 10:00–17:00 · Salesforce as of ${d.sources.salesforce} · Toku as of ${d.sources.toku} · Asterboard as of ${d.sources.asterboard}`;
   renderAgo();
   const ans=calls.filter(c=>c[3]), tc=calls.length, ta=ans.length, aht=ta?sum(ans.map(c=>c[2]))/ta:0;
   const cn=n=>v.crows.length||d.caseRows?v.crows.filter(c=>c[0]===n).length:(d.cases[n]||0);
