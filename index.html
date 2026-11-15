@@ -76,7 +76,7 @@ function view(){
   const calls=d.calls.filter(c=>inW(c[1])&&names.includes(c[0])&&(!state.src||c[4]===state.src));
   const moves=d.moves.filter(m=>inW(m[1])&&names.includes(m[0]));
   const grid=(rows,pick)=>names.map(n=>HOURS.map(h=>rows.filter(r=>r[0]===n&&r[1]===h&&pick(r)).length));
-  const live=(d.live||[]).filter(l=>inW(l[1])&&names.includes(l[0]));
+  const live=(d.live||[]).filter(l=>names.includes(l[0])); // Live counts the whole day from 00:00, not only the 10:00–17:00 window
   const G={calls:grid(calls,()=>1),answered:grid(calls,r=>r[3]),moves:grid(moves,()=>1),live:grid(live,()=>1)};
   const off=0;
   const crows=(d.caseRows||[]).filter(c=>names.includes(c[0]));
@@ -89,7 +89,7 @@ function draw(){
   const ans=calls.filter(c=>c[3]), tc=calls.length, ta=ans.length, aht=ta?sum(ans.map(c=>c[2]))/ta:0;
   const cn=n=>v.crows.length||d.caseRows?v.crows.filter(c=>c[0]===n).length:(d.cases[n]||0);
   const cs=sum(names.map(cn)), lv=v.live.length;
-  $("kpis").innerHTML=[["Total calls",tc,1],["Answered",ta],["Answer rate",tc?Math.round(100*ta/tc)+"%":"–"],["AHT (answered)",fmt(aht)],["Movements",moves.length,0,v.off?v.off+" outside 8:00–22:00":""],["Live",lv,1,"accounts gone live today"],["New cases",cs]]
+  $("kpis").innerHTML=[["Total calls",tc,1],["Answered",ta],["Answer rate",tc?Math.round(100*ta/tc)+"%":"–"],["AHT (answered)",fmt(aht)],["Movements",moves.length,0,v.off?v.off+" outside 8:00–22:00":""],["Live",lv,1,"gone live today (from 00:00)"],["New cases",cs]]
    .map(k=>`<div class="card k ${k[2]?"hi":""}"><span>${k[0]}</span><b>${k[1]}</b>${k[3]?`<small>${k[3]}</small>`:""}</div>`).join("");
   // chart
   const W=900,Hh=230,L=36,B=24,T=10, tot=m=>HOURS.map((_,j)=>sum(G[m].map(r=>r[j])));
