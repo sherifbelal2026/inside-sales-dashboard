@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Inside Sales Hourly Dashboard</title>
+<style>
+/* Layout: filters on top, KPI row, hourly trend, seller x hour heat table, seller summary. Talabat orange accent on warm neutrals. */
+:root{--bg:#f6f4f2;--panel:#ffffff;--ink:#241f1c;--mute:#7a716b;--line:#e8e2dd;--accent:#ff5a00;--good:#1f9d63;--warn:#d98a00;--bad:#d64545;--heat:255,90,0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171413;--panel:#211d1b;--ink:#f3eeea;--mute:#a29890;--line:#3a3430;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171413;--panel:#211d1b;--ink:#f3eeea;--mute:#a29890;--line:#3a3430;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,"Segoe UI",Arial,sans-serif;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:auto;display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:end}
+h1{font-size:22px;margin:0 0 2px}
+.mute{color:var(--mute);font-size:12px}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+select,input{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.k span{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.k b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+.k.hi b{color:var(--accent)}
+.k small{color:var(--mute)}
+h2{font-size:15px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--mute);padding:5px 12px;cursor:pointer;font:inherit}
+.seg button.on{background:var(--accent);color:#fff}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:center;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel)}
+th{color:var(--mute);font-weight:600;font-size:12px;border-bottom:1px solid var(--line)}
+th.s{cursor:pointer}
+td.h{border-radius:4px}
+tfoot td{font-weight:700;border-top:1px solid var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--mute)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+svg text{fill:var(--mute);font-size:11px}
+#msg{color:var(--warn);font-size:12px}
+</style>
+</head><body>
+<div class="wrap">
+<header>
+ <div><h1>Inside Sales Hourly Dashboard</h1>
+ <div class="mute" id="stamp">Loading…</div><div id="msg"></div></div>
+ <div class="filters">
+  <select id="fDate" aria-label="Date"></select>
+  <select id="fSeller" aria-label="Seller"></select>
+  <select id="fSrc" aria-label="Call system"><option value="">Both call systems</option><option>Toku</option><option>Asterboard</option></select>
+ </div>
+</header>
+<section class="kpis" id="kpis"></section>
+<section class="card"><h2>Hourly trend <span class="legend"><span><i class="dot" style="background:var(--accent)"></i>Calls</span><span><i class="dot" style="background:var(--good)"></i>Answered</span><span><i class="dot" style="background:var(--warn)"></i>Movements</span></span></h2>
+ <svg id="chart" viewBox="0 0 900 230" width="100%" role="img" aria-label="Calls, answered calls and movements per hour"></svg></section>
+<section class="card"><h2>Seller by hour <div class="seg" id="seg"></div></h2><div class="scroll"><table id="tbl"></table></div>
+ <div class="legend" style="margin-top:8px"><span>Darker = more activity. Movements count each GRID once, in the hour of its last status change.</span></div></section>
+<section class="card"><h2>Seller summary</h2><div class="scroll"><table id="sum"></table></div>
+ <div class="legend" style="margin-top:8px"><span>Answered = Toku "Completed" or Asterboard "ANSWERED". AHT = average duration of answered calls. Cases are daily only.</span></div></section>
+</div>
+<script>
+// Fallback snapshot embedded at publish time; the live copy comes from the shared store.
+const SEED = {"date":"2026-11-15","updated":"13:10","sources":{"toku":"12:25","asterboard":"12:31","salesforce":"13:10"},"names":["Yoliana Ramzy","Sharath Chakkingal","Manar Aborezktien","Fatma Maghazy","Nada Abdelfattah","Rana Salem","Mennatallah Abdallah","Magdy Hamza","Rahma Abdelrazik","Youmna Ali","Shahd Shehata","Kerollos Rizk","Omar Ghanem","Ziad Abdelmetaal","Abdelrahman Tayea"],"calls":[["Abdelrahman Tayea",12,0,0,"Toku"],["Sharath Chakkingal",11,16,1,"Toku"],["Ziad Abdelmetaal",12,0,0,"Toku"],["Sharath Chakkingal",11,4,1,"Toku"],["Sharath Chakkingal",11,0,0,"Toku"],["Sharath Chakkingal",12,69,1,"Toku"],["Abdelrahman Tayea",10,40,1,"Toku"],["Magdy Hamza",12,0,0,"Toku"],["Sharath Chakkingal",9,0,0,"Toku"],["Abdelrahman Tayea",11,0,0,"Toku"],["Sharath Chakkingal",11,80,1,"Toku"],["Magdy Hamza",12,0,0,"Toku"],["Sharath Chakkingal",9,35,1,"Toku"],["Ziad Abdelmetaal",12,60,1,"Toku"],["Abdelrahman Tayea",11,0,0,"Toku"],["Ziad Abdelmetaal",12,28,1,"Toku"],["Sharath Chakkingal",9,0,0,"Toku"],["Fatma Maghazy",11,0,0,"Toku"],["Sharath Chakkingal",10,437,1,"Toku"],["Sharath Chakkingal",11,0,0,"Toku"],["Magdy Hamza",12,0,0,"Toku"],["Sharath Chakkingal",11,380,1,"Toku"],["Ziad Abdelmetaal",12,0,0,"Toku"],["Nada Abdelfattah",12,86,1,"Asterboard"],["Kerollos Rizk",12,58,0,"Asterboard"],["Kerollos Rizk",12,52,0,"Asterboard"],["Rana Salem",12,283,1,"Asterboard"],["Kerollos Rizk",12,14,0,"Asterboard"],["Kerollos Rizk",12,38,1,"Asterboard"],["Kerollos Rizk",12,63,0,"Asterboard"],["Kerollos Rizk",12,51,0,"Asterboard"],["Kerollos Rizk",12,221,1,"Asterboard"],["Kerollos Rizk",12,69,1,"Asterboard"],["Shahd Shehata",12,857,1,"Asterboard"],["Kerollos Rizk",12,75,1,"Asterboard"],["Shahd Shehata",12,43,0,"Asterboard"],["Kerollos Rizk",12,129,1,"Asterboard"],["Youmna Ali",11,136,1,"Asterboard"],["Shahd Shehata",11,96,1,"Asterboard"],["Kerollos Rizk",11,84,1,"Asterboard"],["Abdelrahman Tayea",11,299,1,"Asterboard"],["Abdelrahman Tayea",11,65,0,"Asterboard"],["Shahd Shehata",11,53,1,"Asterboard"],["Fatma Maghazy",11,5,0,"Asterboard"],["Shahd Shehata",11,25,1,"Asterboard"],["Rana Salem",11,247,1,"Asterboard"],["Rana Salem",11,269,1,"Asterboard"],["Rana Salem",11,19,0,"Asterboard"],["Rana Salem",11,26,0,"Asterboard"],["Rana Salem",11,22,0,"Asterboard"],["Rana Salem",11,21,0,"Asterboard"],["Kerollos Rizk",11,214,1,"Asterboard"],["Youmna Ali",11,60,1,"Asterboard"],["Rana Salem",11,35,0,"Asterboard"],["Rana Salem",10,378,1,"Asterboard"]],"moves":[["Abdelrahman Tayea",12,"Collecting Documents"],["Abdelrahman Tayea",11,"Quality Check"],["Fatma Maghazy",12,"Collecting Documents"],["Fatma Maghazy",11,"Lost"],["Kerollos Rizk",9,"Onboarding"],["Kerollos Rizk",9,"Onboarding"],["Kerollos Rizk",9,"Onboarding"],["Kerollos Rizk",9,"Onboarding"],["Magdy Hamza",12,"Collecting Documents"],["Manar Aborezktien",11,"Onboarding"],["Nada Abdelfattah",12,"Converted"],["Nada Abdelfattah",11,"Collecting Documents"],["Nada Abdelfattah",12,"Menu processing"],["Rahma Abdelrazik",8,"Onboarding"],["Rana Salem",11,"Negotiation"],["Rana Salem",11,"Collecting Documents"],["Rana Salem",12,"Quality Check"],["Shahd Shehata",11,"Quality Check"],["Shahd Shehata",12,"Quality Check"],["Sharath Chakkingal",12,"Collecting Documents"],["Yoliana Ramzy",11,"Quality Check"],["Yoliana Ramzy",12,"Quality Check"],["Youmna Ali",12,"Quality Check"],["Ziad Abdelmetaal",1,"Collecting Documents"],["Fatma Maghazy",11,"Lost"],["Kerollos Rizk",12,"Contacted"],["Kerollos Rizk",12,"Lost"],["Mennatallah Abdallah",12,"Lost"],["Nada Abdelfattah",12,"Contacted"],["Nada Abdelfattah",12,"Long-term follow-up"],["Omar Ghanem",13,"Contacted"],["Rana Salem",11,"Lost"],["Rana Salem",11,"Long-term follow-up"],["Sharath Chakkingal",10,"Open"],["Sharath Chakkingal",10,"Open"],["Sharath Chakkingal",11,"In Review"],["Sharath Chakkingal",12,"Lost"],["Sharath Chakkingal",12,"Lost"],["Youmna Ali",11,"Contacted"],["Youmna Ali",12,"Contacted"]],"cases":{"Abdelrahman Tayea":1,"Yoliana Ramzy":2,"Rana Salem":1,"Youmna Ali":1,"Shahd Shehata":1,"Nada Abdelfattah":1}};
+const HOURS=[8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+let DAYS={}; DAYS[SEED.date]=SEED;
+let cur="calls", state={date:SEED.date,seller:"",src:""};
+const $=id=>document.getElementById(id), sum=a=>a.reduce((x,y)=>x+y,0);
+const fmt=s=>s?Math.floor(s/60)+":"+String(Math.round(s%60)).padStart(2,"0"):"–";
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function view(){
+  const d=DAYS[state.date]||SEED, names=d.names.filter(n=>!state.seller||n===state.seller);
+  const calls=d.calls.filter(c=>names.includes(c[0])&&(!state.src||c[4]===state.src));
+  const moves=d.moves.filter(m=>names.includes(m[0]));
+  const grid=(rows,pick)=>names.map(n=>HOURS.map(h=>rows.filter(r=>r[0]===n&&r[1]===h&&pick(r)).length));
+  const G={calls:grid(calls,()=>1),answered:grid(calls,r=>r[3]),moves:grid(moves,()=>1)};
+  const off=moves.filter(m=>!HOURS.includes(m[1])).length;
+  return {d,names,calls,moves,G,off};
+}
+function draw(){
+  const v=view(), {d,names,calls,moves,G}=v;
+  $("stamp").textContent=`${state.date} · Salesforce as of ${d.sources.salesforce} · Toku as of ${d.sources.toku} · Asterboard as of ${d.sources.asterboard}`;
+  const ans=calls.filter(c=>c[3]), tc=calls.length, ta=ans.length, aht=ta?sum(ans.map(c=>c[2]))/ta:0;
+  const cs=sum(names.map(n=>d.cases[n]||0));
+  $("kpis").innerHTML=[["Total calls",tc,1],["Answered",ta],["Answer rate",tc?Math.round(100*ta/tc)+"%":"–"],["AHT (answered)",fmt(aht)],["Movements",moves.length,0,v.off?v.off+" outside 8:00–22:00":""],["New cases",cs]]
+   .map(k=>`<div class="card k ${k[2]?"hi":""}"><span>${k[0]}</span><b>${k[1]}</b>${k[3]?`<small>${k[3]}</small>`:""}</div>`).join("");
+  // chart
+  const W=900,Hh=230,L=36,B=24,T=10, tot=m=>HOURS.map((_,j)=>sum(G[m].map(r=>r[j])));
+  const max=Math.max(4,...tot("calls"),...tot("moves"))+1, x=j=>L+j*(W-L-10)/(HOURS.length-1), y=n=>Hh-B-n*(Hh-B-T)/max;
+  let g="";
+  for(let i=0;i<=4;i++){const n=Math.round(max*i/4);g+=`<line x1="${L}" x2="${W-10}" y1="${y(n)}" y2="${y(n)}" stroke="var(--line)"/><text x="${L-6}" y="${y(n)+4}" text-anchor="end">${n}</text>`}
+  HOURS.forEach((h,j)=>g+=`<text x="${x(j)}" y="${Hh-6}" text-anchor="middle">${h}:00</text>`);
+  [["calls","var(--accent)"],["answered","var(--good)"],["moves","var(--warn)"]].forEach(([m,c])=>{const t=tot(m),p=t.map((n,j)=>[x(j),y(n)]);
+   g+=`<polyline fill="none" stroke="${c}" stroke-width="2.5" points="${p.map(q=>q.join(",")).join(" ")}"/>`+p.map((q,j)=>`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="${c}"><title>${HOURS[j]}:00 · ${t[j]}</title></circle>`).join("")});
+  $("chart").innerHTML=g;
+  // heat table
+  [...$("seg").children].forEach(b=>b.classList.toggle("on",b.dataset.k===cur));
+  const gd=G[cur], mx=Math.max(1,...gd.flat());
+  $("tbl").innerHTML=`<thead><tr><th>Seller</th>${HOURS.map(h=>`<th>${h}:00</th>`).join("")}<th>Total</th></tr></thead><tbody>${names.map((n,i)=>`<tr><td>${esc(n)}</td>${gd[i].map(c=>`<td class="h" style="background:rgba(var(--heat),${c?(0.14+0.7*c/mx).toFixed(2):0});color:${c/mx>.6?"#fff":"inherit"}">${c||"·"}</td>`).join("")}<td><b>${sum(gd[i])}</b></td></tr>`).join("")}</tbody><tfoot><tr><td>Team</td>${HOURS.map((_,j)=>`<td>${sum(gd.map(r=>r[j]))}</td>`).join("")}<td>${sum(gd.map(sum))}</td></tr></tfoot>`;
+  // summary
+  const rows=names.map((n,i)=>{const c=sum(G.calls[i]),a=sum(G.answered[i]),as=calls.filter(x=>x[0]===n&&x[3]);return {n,c,a,r:c?a/c:-1,aht:as.length?sum(as.map(x=>x[2]))/as.length:0,m:sum(G.moves[i]),cs:d.cases[n]||0}});
+  const key=sortKey; rows.sort((p,q)=>key==="n"?p.n.localeCompare(q.n):(q[key]-p[key])||p.n.localeCompare(q.n));
+  const th=(k,l)=>`<th class="s" data-k="${k}">${l}${sortKey===k?" ▾":""}</th>`;
+  $("sum").innerHTML=`<thead><tr>${th("n","Seller")}${th("c","Calls")}${th("a","Answered")}${th("r","Rate")}${th("aht","AHT")}${th("m","Movements")}${th("cs","Cases")}</tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.n)}</td><td>${r.c}</td><td>${r.a}</td><td style="color:${r.r<0?"var(--mute)":r.r>=.5?"var(--good)":"var(--warn)"}">${r.r<0?"–":Math.round(100*r.r)+"%"}</td><td>${fmt(r.aht)}</td><td>${r.m}</td><td>${r.cs}</td></tr>`).join("")}</tbody><tfoot><tr><td>Team</td><td>${sum(rows.map(r=>r.c))}</td><td>${sum(rows.map(r=>r.a))}</td><td>${tc?Math.round(100*ta/tc)+"%":"–"}</td><td>${fmt(aht)}</td><td>${sum(rows.map(r=>r.m))}</td><td>${sum(rows.map(r=>r.cs))}</td></tr></tfoot>`;
+  $("sum").querySelectorAll("th.s").forEach(h=>h.onclick=()=>{sortKey=h.dataset.k;draw()});
+}
+let sortKey="c";
+function fillFilters(){
+  const ds=Object.keys(DAYS).sort().reverse(); $("fDate").innerHTML=ds.map(x=>`<option ${x===state.date?"selected":""}>${x}</option>`).join("");
+  const d=DAYS[state.date]||SEED; $("fSeller").innerHTML=`<option value="">All sellers</option>`+d.names.map(n=>`<option ${n===state.seller?"selected":""}>${esc(n)}</option>`).join("");
+}
+const seg=$("seg");[["calls","Calls"],["answered","Answered"],["moves","Movements"]].forEach(([k,l])=>{const b=document.createElement("button");b.textContent=l;b.dataset.k=k;b.onclick=()=>{cur=k;draw()};seg.append(b)});
+$("fDate").onchange=e=>{state.date=e.target.value;fillFilters();draw()};
+$("fSeller").onchange=e=>{state.seller=e.target.value;draw()};
+$("fSrc").onchange=e=>{state.src=e.target.value;draw()};
+fillFilters();draw();
+// Latest data lives in data.json next to this page (one entry per day); it is refreshed during the day.
+(async()=>{
+  try{
+    const r=await fetch("data.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok)throw 0;
+    const j=await r.json(), days=j.days||{}; let n=0;
+    Object.keys(days).forEach(k=>{if(days[k]&&days[k].calls){DAYS[k]=days[k];n++}});
+    if(n){state.date=Object.keys(DAYS).sort().pop();fillFilters();draw()}
+  }catch(e){$("msg").textContent="Could not load the latest data; showing the last saved snapshot."}
+})();
+</script>
+
+</body></html>
