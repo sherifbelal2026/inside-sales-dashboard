@@ -143,9 +143,14 @@ fillFilters();draw();
 // Latest data lives in data.json next to this page (one entry per day); it is refreshed during the day.
 (async()=>{
   try{
-    const r=await fetch("data.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok)throw 0;
-    const j=await r.json(), days=j.days||{}; let n=0;
-    Object.keys(days).forEach(k=>{if(days[k]&&days[k].calls){DAYS[k]=days[k];n++}});
+    // data.json = history of earlier days; today.json = the day being refreshed hourly (wins on conflict)
+    let n=0;
+    for(const f of ["data.json","today.json"]){
+      try{const r=await fetch(f+"?t="+Date.now(),{cache:"no-store"}); if(!r.ok)continue;
+        const j=await r.json(), days=j.days||{};
+        Object.keys(days).forEach(k=>{if(days[k]&&days[k].calls){DAYS[k]=days[k];n++}});}catch(e){}
+    }
+    if(!n)throw 0;
     if(n){state.date=Object.keys(DAYS).sort().pop();fillFilters();draw()}
   }catch(e){$("msg").textContent="Could not load the latest data; showing the last saved snapshot."}
 })();
