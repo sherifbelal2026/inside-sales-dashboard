@@ -154,16 +154,19 @@ fillFilters();draw();
     if(n){state.date=Object.keys(DAYS).sort().pop();fillFilters();draw()}
   }catch(e){$("msg").textContent="Could not load the latest data; showing the last saved snapshot."}
 })();
-</script>
-<!-- قسم مساعد الذكاء الاصطناعي (بوابة مخصصة) -->
+</script><!-- قسم مساعد الذكاء الاصطناعي (Claude - بوابة الشركة) -->
 <div id="claude-ai-panel" style="margin: 20px auto; max-width: 900px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; font-family: system-ui, sans-serif; direction: rtl; text-align: right;">
   <h3 style="margin-top: 0; color: #1e293b;">🤖 تحليل الأداء بالذكاء الاصطناعي (Claude)</h3>
   
   <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-    <input type="text" id="custom-api-url" placeholder="أدخل رابط البوابة المخصص (مثال: https://company.com)" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; direction: ltr;">
+    <input type="text" id="custom-api-url" value="https://talabat.io" placeholder="رابط البوابة" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; direction: ltr;">
     
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-      <input type="password" id="claude-api-key" placeholder="أدخل المفتاح المخصص (sk-...)" style="flex: 1; min-width: 250px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; direction: ltr;">
+      <input type="password" id="claude-api-key" placeholder="أدخل المفتاح المخصص (sk-...)" style="flex: 2; min-width: 200px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; direction: ltr;">
+      <input type="text" id="claude-model-name" value="claude-3-7-sonnet" placeholder="اسم النموذج (Model)" style="flex: 1; min-width: 150px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; direction: ltr;">
+    </div>
+
+    <div style="display: flex; gap: 10px;">
       <button onclick="saveCustomConfig()" style="padding: 10px 16px; background: #475569; color: white; border: none; border-radius: 6px; cursor: pointer;">حفظ الإعدادات</button>
       <button onclick="analyzeDashboard()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">تحليل بيانات اللوحة الآن</button>
     </div>
@@ -174,38 +177,44 @@ fillFilters();draw();
 </div>
 
 <script>
-  // استرجاع الرابط والمفتاح المحفوظين عند فتح الصفحة
   window.addEventListener('DOMContentLoaded', () => {
     const savedUrl = localStorage.getItem('custom_claude_url');
     const savedKey = localStorage.getItem('custom_claude_key');
+    const savedModel = localStorage.getItem('custom_claude_model');
+    
     if (savedUrl) document.getElementById('custom-api-url').value = savedUrl;
-    if (savedKey) document.getElementById('claude-api-key').value = savedKey;
-    if (savedUrl && savedKey) {
-      document.getElementById('claude-status').innerText = '✅ الإعدادات محفوظة في متصفحك وجاهزة للاستخدام.';
+    if (savedKey) {
+      document.getElementById('claude-api-key').value = savedKey;
+      document.getElementById('claude-status').innerText = '✅ المفتاح محفوظ وجاهز للاستخدام.';
     }
+    if (savedModel) document.getElementById('claude-model-name').value = savedModel;
   });
 
-  // حفظ الرابط والمفتاح في متصفحك فقط
   function saveCustomConfig() {
     const url = document.getElementById('custom-api-url').value.trim();
     const key = document.getElementById('claude-api-key').value.trim();
+    const model = document.getElementById('claude-model-name').value.trim();
+    
     if (!url || !key) {
-      alert('يرجى إدخال كل من الرابط المخصص والمفتاح.');
+      alert('يرجى إدخال الرابط والمفتاح.');
       return;
     }
+    
     localStorage.setItem('custom_claude_url', url);
     localStorage.setItem('custom_claude_key', key);
-    document.getElementById('claude-status').innerText = '✅ تم حفظ الرابط والمفتاح في متصفحك بنجاح.';
+    localStorage.setItem('custom_claude_model', model || 'claude-3-7-sonnet');
+    document.getElementById('claude-status').innerText = '✅ تم حفظ الإعدادات بنجاح.';
   }
 
   async function analyzeDashboard() {
-    const apiUrl = document.getElementById('custom-api-url').value.trim() || localStorage.getItem('custom_claude_url');
-    const apiKey = document.getElementById('claude-api-key').value.trim() || localStorage.getItem('custom_claude_key');
+    const apiUrl = document.getElementById('custom-api-url').value.trim();
+    const apiKey = document.getElementById('claude-api-key').value.trim();
+    const modelName = document.getElementById('claude-model-name').value.trim() || 'claude-3-7-sonnet';
     const outputDiv = document.getElementById('claude-output');
     const statusDiv = document.getElementById('claude-status');
 
     if (!apiUrl || !apiKey) {
-      alert('الرجاء إدخال وحفظ الرابط والمفتاح أولاً.');
+      alert('الرجاء إدخال الرابط والمفتاح أولاً.');
       return;
     }
 
@@ -214,45 +223,22 @@ fillFilters();draw();
     if (aiPanel) aiPanel.remove();
     const dashboardText = cloneBody.innerText;
 
-    statusDiv.innerText = '⏳ جاري الاتصال بالبوابة وتحليل بيانات اللوحة...';
+    statusDiv.innerText = '⏳ جاري الاتصال ببوابة الشركة وتحليل البيانات...';
     outputDiv.style.display = 'none';
 
-    const promptText = `أنت محلل بيانات مبيعات (Inside Sales Analyst). قم بتحليل بيانات لوحة التحكم التالية التي تشمل المكالمات (Calls)، والحالات الجديدة (New cases)، والـ Live count، والتحركات كل ساعة (Movements) لكل بائع:
-
-${dashboardText}
-
-المطلوب منك تقديم ملخص تنفيذي سريع باللغة العربية يشمل:
-1. نظرة عامة على الأداء الحالي (إجمالي النشاط ونسبة الرد).
-2. أبرز البائعين أداءً من حيث المكالمات والـ Movements والحالات الجديدة.
-3. أي ملاحظات أو تراجعات تحتاج إلى تدخل سريع في الساعات القادمة.`;
-
-    // تحديد صيغة الطلب تلقائياً حسب نوع البوابة (OpenAI-compatible أو Anthropic)
-    const isOpenAICompatible = apiUrl.includes('/chat/completions');
-    
-    const headers = isOpenAICompatible ? {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    } : {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    };
-
-    const bodyPayload = isOpenAICompatible ? {
-      model: 'claude-3-7-sonnet-latest',
-      messages: [{ role: 'user', content: promptText }]
-    } : {
-      model: 'claude-3-7-sonnet-latest',
-      max_tokens: 1500,
-      messages: [{ role: 'user', content: promptText }]
-    };
+    const promptText = `أنت محلل بيانات مبيعات (Inside Sales Analyst). قم بتحليل بيانات لوحة التحكم التالية التي تشمل المكالمات (Calls)، والحالات الجديدة (New cases)، والـ Live count، والتحركات كل ساعة (Movements) لكل بائع:\n\n${dashboardText}\n\nقدم ملخصاً تنفيذياً سريعاً باللغة العربية يشمل:\n1. نظرة عامة على الأداء الحالي (إجمالي النشاط ونسبة الرد).\n2. أبرز البائعين أداءً من حيث المكالمات والـ Movements والحالات الجديدة.\n3. أي ملاحظات أو تراجعات تحتاج إلى تدخل سريع في الساعات القادمة.`;
 
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify(bodyPayload)
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: [{ role: 'user', content: promptText }]
+        })
       });
 
       const data = await response.json();
@@ -261,19 +247,13 @@ ${dashboardText}
         throw new Error(data.error?.message || JSON.stringify(data));
       }
 
-      // قراءة الرد سواء جاء بصيغة Anthropic أو OpenAI
-            const replyText = isOpenAICompatible 
-        ? data.choices?.[0]?.message?.content 
-        : data.content?.[0]?.text;
-
-      outputDiv.innerText = replyText || 'تم الاتصال بنجاح ولكن لم يُرجع الخادم نصاً.';
+      const replyText = data.choices?.[0]?.message?.content;
+      outputDiv.innerText = replyText || 'تم الاتصال ولكن لم يُرجع الخادم نصاً.';
       outputDiv.style.display = 'block';
       statusDiv.innerText = '✅ تم التحليل بنجاح.';
     } catch (error) {
       statusDiv.innerText = '❌ خطأ: ' + error.message;
     }
-  }
-</script>
   }
 </script>
 </body></html>
