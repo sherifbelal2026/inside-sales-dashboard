@@ -262,7 +262,7 @@ ${dashboardText}
       }
 
       // قراءة الرد سواء جاء بصيغة Anthropic أو OpenAI
-      const replyText = isOpenAICompatible 
+            const replyText = isOpenAICompatible 
         ? data.choices?.[0]?.message?.content 
         : data.content?.[0]?.text;
 
